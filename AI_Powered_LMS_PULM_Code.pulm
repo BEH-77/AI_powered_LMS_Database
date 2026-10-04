@@ -1,0 +1,343 @@
+@startchen
+title AI-Powered LMS - Chen EER Diagram
+
+' =====================================================================
+' PART 1: IDENTITY AND ACCESS (Douae)
+' =====================================================================
+
+entity Login {
+    email <<key>>
+    password
+}
+
+entity Person {
+    per_id <<key>>
+    per_name {
+        per_lname
+        per_fname
+    }
+}
+
+entity Student {
+    std_gpa <<derived>>
+    std_earnedcredits <<derived>>
+    std_major
+}
+
+entity Teacher {
+    tch_speciality
+}
+
+Login ->= d {Person}
+Person ->=d {Student, Teacher}
+
+' =====================================================================
+' PART 2: ACADEMIC STRUCTURE (Yassine)
+' =====================================================================
+
+entity Course {
+  course_id <<key>>
+  code
+  title
+  description
+  semester
+  year
+}
+
+entity Enrollment {
+  enrollment_id <<key>>
+  enrollment_date
+  status
+  final_grade
+}
+
+entity Course_Assistant {
+  assistant_id <<key>>
+  job_type
+  start_date
+  end_date
+}
+
+entity Module {
+  module_id <<key>>
+  title
+}
+
+entity Resource {
+  resource_id <<key>>
+  title
+  description
+  type
+  content
+  upload_date
+}
+
+' Relationships (Academic Structure)
+
+relationship CREATES {
+}
+relationship MAKES {
+}
+relationship FOR_COURSE {
+}
+relationship WORKS_AS {
+}
+relationship ASSISTS_IN {
+}
+relationship CONTAINS_MODULE {
+}
+relationship HAS_ASSIGNMENT {
+}
+relationship HAS_RESOURCE {
+}
+relationship INCLUDES_RESOURCE {
+}
+
+' =====================================================================
+' PART 3: ASSESSMENT (Razane and Amine)
+' =====================================================================
+
+' Entities (Amine)
+
+entity Assignment {
+        assign_id <<key>>
+        title
+        description
+        due_date {
+                date
+                time
+        }
+        maximum_score
+        type
+        status <<derived>>
+        question_count <<derived>>
+        total_points <<derived>>
+}
+
+entity Question {
+        question_id <<key>>
+        difficulty
+        points
+        text
+        grading_rubric
+}
+
+entity MCQ_Question {
+        allows_multiple_answers
+}
+
+entity Question_Option <<weak>> {
+        is_correct
+        option_label <<key>>
+        option_text
+}
+
+entity Short_Answer_Question {
+        model_answer
+        accepted_answers <<multi>>
+}
+
+entity Essay_Question {
+        words_limit {
+                min_words
+                max_words
+        }
+}
+
+' Entities (Razane)
+
+entity Attempt {
+  attempt_id <<key>>
+  answer
+  is_correct
+  score
+  time_spent
+  attempt_number
+  attempted_at
+}
+
+entity Submission {
+  submission_id <<key>>
+  submitted_at
+  status
+  total_score
+}
+
+' Relationships (Assessment)
+
+relationship CONTAINS_QUESTION {
+        position
+}
+
+relationship HAS_OPTION <<identifying>> {
+}
+
+relationship CONTAINS_ATTEMPT {
+}
+
+relationship IS_ATTEMPTED_IN {
+}
+
+Question =>= d {MCQ_Question, Short_Answer_Question, Essay_Question}
+
+Assignment =N= CONTAINS_QUESTION
+CONTAINS_QUESTION -M- Question
+
+MCQ_Question =1= HAS_OPTION
+HAS_OPTION =N= Question_Option
+
+Submission -1- CONTAINS_ATTEMPT
+CONTAINS_ATTEMPT =N= Attempt
+
+Question -1- IS_ATTEMPTED_IN
+IS_ATTEMPTED_IN =N= Attempt
+
+' =====================================================================
+' PART 4: AI-ASSISTED LEARNING (Badr)
+' =====================================================================
+
+entity Hint {
+  hint_id <<key>>
+  level
+  content
+  source
+}
+
+entity Hint_Authoring_Session {
+  session_id <<key>>
+  started_at
+  status
+}
+
+entity Hint_Authoring_Log {
+  log_id <<key>>
+  turn_number
+  speaker
+  message
+  timestamp
+}
+
+entity Hint_Request {
+  request_id <<key>>
+  requested_at
+}
+
+entity Hint_Feedback {
+  feedback_id <<key>>
+  rating
+  comment
+  created_at
+}
+
+entity Performance_Statistics {
+  stat_id <<key>>
+  scope_type
+  scope_id
+  average_score
+  success_rate
+  number_of_attempts
+  generated_at
+}
+
+' Relationships (AI-Assisted Learning)
+
+relationship HAS_HINT {
+}
+relationship HAS_SESSION {
+}
+relationship RUNS {
+}
+relationship CONSISTS_OF {
+}
+relationship PRODUCES {
+}
+relationship TRIGGERS {
+}
+relationship SERVES {
+}
+relationship RECEIVES {
+}
+relationship GIVES {
+}
+relationship SCOPED_TO_COURSE {
+}
+relationship SCOPED_TO_ASSIGNMENT {
+}
+relationship SCOPED_TO_MODULE {
+}
+relationship SCOPED_TO_QUESTION {
+}
+
+' =====================================================================
+' LINKS
+' =====================================================================
+
+' Links: Academic Structure
+
+Teacher -1- CREATES
+CREATES -N- Course
+
+Student -1- MAKES
+MAKES -N- Enrollment
+Enrollment -N- FOR_COURSE
+FOR_COURSE -1- Course
+
+Student -1- WORKS_AS
+WORKS_AS -N- Course_Assistant
+Course_Assistant -N- ASSISTS_IN
+ASSISTS_IN -1- Course
+
+Course -1- CONTAINS_MODULE
+CONTAINS_MODULE -N- Module
+
+Course -1- HAS_ASSIGNMENT
+HAS_ASSIGNMENT -N- Assignment
+
+Course -1- HAS_RESOURCE
+HAS_RESOURCE -N- Resource
+
+Module -1- INCLUDES_RESOURCE
+INCLUDES_RESOURCE -N- Resource
+
+' Links: AI-Assisted Learning
+
+Question -1- HAS_HINT
+HAS_HINT -N- Hint
+
+Question -1- HAS_SESSION
+HAS_SESSION -N- Hint_Authoring_Session
+
+Teacher -1- RUNS
+RUNS -N- Hint_Authoring_Session
+
+Hint_Authoring_Session -1- CONSISTS_OF
+CONSISTS_OF -N- Hint_Authoring_Log
+
+Hint_Authoring_Session -(0,1)- PRODUCES
+PRODUCES -(0,1)- Hint
+
+Attempt -1- TRIGGERS
+TRIGGERS -N- Hint_Request
+
+Hint -1- SERVES
+SERVES -N- Hint_Request
+
+Hint -1- RECEIVES
+RECEIVES -N- Hint_Feedback
+
+Teacher -1- GIVES
+GIVES -N- Hint_Feedback
+
+Course -(0,1)- SCOPED_TO_COURSE
+SCOPED_TO_COURSE -N- Performance_Statistics
+
+Assignment -(0,1)- SCOPED_TO_ASSIGNMENT
+SCOPED_TO_ASSIGNMENT -N- Performance_Statistics
+
+Module -(0,1)- SCOPED_TO_MODULE
+SCOPED_TO_MODULE -N- Performance_Statistics
+
+Question -(0,1)- SCOPED_TO_QUESTION
+SCOPED_TO_QUESTION -N- Performance_Statistics
+
+@endchen
